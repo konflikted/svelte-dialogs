@@ -1,422 +1,107 @@
-# svelte-dialogs
+# This repo is no longer maintained. Consider using `npm init vite` and selecting the `svelte` option or — if you want a full-fledged app framework — use [SvelteKit](https://kit.svelte.dev), the official application framework for Svelte.
 
-handy dialogs in/for svelte, see some [examples](https://bibizio.github.io/svelte-dialogs/)
+---
 
-## Install
+# svelte app
 
-You can install via _npm_
+This is a project template for [Svelte](https://svelte.dev) apps. It lives at https://github.com/sveltejs/template.
 
-`npm i svelte-dialogs`
+To create a new project based on this template using [degit](https://github.com/Rich-Harris/degit):
 
-or use [jsdelivr CDN](https://www.jsdelivr.com/package/npm/svelte-dialogs) and add the script tag
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/svelte-dialogs"></script>
+```bash
+npx degit sveltejs/template svelte-app
+cd svelte-app
 ```
 
-If so, follow the [CDN script tag](#cdn-script-tag) usage.
+*Note that you will need to have [Node.js](https://nodejs.org) installed.*
 
-## Usage
 
-### Basics
+## Get started
 
-the easiest way to use _svelte-dialog_ is
+Install the dependencies...
 
-```svelte
-<script>
-  import { dialogs } from "svelte-dialogs";
-</script>
-
-<button on:click={() => dialogs.alert('this is an alert')}>click me</button>
+```bash
+cd svelte-app
+npm install
 ```
 
-`dialogs` methods for rendering a dialog are:
+...then start [Rollup](https://rollupjs.org):
 
-- `alert()` shows a dialog with a dismiss button
-- `confirm()` shows a dialog with a confirm and decline button
-- `prompt()` shows a dialog with inputs, a cancel, submit and an optional reset button
-- `modal()` shows a modal with..... well, everything you want in it (or nothing, if called empty)
-- `error()`, `success()` and `warning()` show accordingly styled alert. These are handy methods meant to be customized in configuration (or used as they are, if you like the default styles....)
-
-all exepts for `prompt()` can be called with an options parameter ([see below](#options)) or with a string parameter (rendered as html):
-
-- `alert()` and `confirm()` will use that as a title
-- `error()`, `success()` and `warning()` will use that as text (title is meant to be the same for all of them)
-- `modal()` will use it as the whole content.
-
-```svelte
-<script>
-  import { dialogs } from "svelte-dialogs";
-
-  /**
-   * When using custom modal content, use the default title id (dialog-title-id)
-   * or change the titleId options accordingly for accessibility reasons:
-   * titleId is used in aria-labelledby attribute
-   */
-  const htmlString = `
-    <div>
-        <h1 id="dialog-title-id">all the html you want</h1>
-        <div style="text-align: center">
-            <p>now in text!</p>
-        </div>
-    </div>`;
-</script>
-
-<button on:click={() => dialogs.modal(htmlString)}>Click me!</button>
+```bash
+npm run dev
 ```
 
-`prompt()` accepts two parameters:
+Navigate to [localhost:8080](http://localhost:8080). You should see your app running. Edit a component file in `src`, save it, and reload the page to see your changes.
 
-- a string/SvelteComponent/object or array of string/SvelteComponent/object parameter
-- an options parameter (optional)
+By default, the server will only respond to requests from localhost. To allow connections from other computers, edit the `sirv` commands in package.json to include the option `--host 0.0.0.0`.
 
-Using strings in first parameter, will result in inputs with that string as labels. Using objects, you can specify component and props to use as input.
-If you pass only props, the default input is used.
+If you're using [Visual Studio Code](https://code.visualstudio.com/) we recommend installing the official extension [Svelte for VS Code](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode). If you are using other editors you may need to install a plugin in order to get syntax highlighting and intellisense.
 
-```svelte
-<script>
-  import { dialogs } from "svelte-dialogs";
-</script>
+## Building and running in production mode
 
-<button on:click={() => dialogs.prompt("an input")}>click me</button>
-<button on:click={() => dialogs.prompt(["an input", { label: "a required password input", type: "password", required: true }])}>click me</button>
+To create an optimised version of the app:
+
+```bash
+npm run build
 ```
 
-### With options
+You can run the newly built app with `npm run start`. This uses [sirv](https://github.com/lukeed/sirv), which is included in your package.json's `dependencies` so that the app will work when you deploy to platforms like [Heroku](https://heroku.com).
 
-You can use options with all the methods ([see below](#options)) like so:
 
-```svelte
-<script>
-  import { dialogs } from "svelte-dialogs";
+## Single-page app mode
 
-  const opts = {
-    title: "a title",
-    text: "the text",
-    titleClass: "my-title-class",
-    closeButton: false,
-    closeOnBg: true,
-    onShow: () => {
-      doSomething();
-      doSomethingElse();
-    }
-    transitions: {
-      in: {
-        transition: fade,
-        props: {
-          duration: 2000,
-        },
-      },
-    },
-  };
-</script>
+By default, sirv will only respond to requests that match files in `public`. This is to maximise compatibility with static fileservers, allowing you to deploy your app anywhere.
 
-<button on:click={() => dialogs.modal(opts)}>click me</button>
-<button on:click={() => dialogs.prompt("an input", opts)}>click me</button>
+If you're building a single-page app (SPA) with multiple routes, sirv needs to be able to respond to requests for *any* path. You can make it so by editing the `"start"` command in package.json:
+
+```js
+"start": "sirv public --single"
 ```
 
-### User component
+## Using TypeScript
 
-`modal()` also can be called with a _SvelteComponent_ parameter and an optional _props_ parameter.
+This template comes with a script to set up a TypeScript development environment, you can run it immediately after cloning the template with:
 
-_svelte-dialogs_ also exports a `DialogContent` component with three styled optional slots (_header_, _body_ and _footer_).
-
-To retrieve the close function and options from the context, _svelte-dialogs_ exports `getClose()` and `getOptions()` functions to be called at initialization.
-
-So for example:
-
-```svelte
-// MyComponent.svelte
-<script>
-  import { DialogContent, getClose, getOptions } from "svelte-dialogs";
-
-  const close = getClose();
-  const {titleId} = getOptions();
-  export let name = "";
-</script>
-
-<DialogContent>
-  <h1 id={titleId} slot="header">My component</h1>
-  <svelte:fragment slot="body">
-    <p>hello {name}</p>
-  </svelte:fragment>
-  <svelte:fragment slot="footer">
-    <button on:click={() => close('!')}>close me</button>
-  </svelte:fragment>
-</DialogContent>
-
-
-// another component
-<script>
-  import { dialogs } from "svelte-dialogs";
-  import MyComponent from "./MyComponent.svelte";
-</script>
-
-<button on:click={() => dialogs.modal(MyComponent, { name: "world" }).then(dialogs.alert)}>click me</button>
+```bash
+node scripts/setupTypeScript.js
 ```
 
-`prompt()` accepts as first parameter, an object, or objects array, in the shape of `{component: SvelteComponent, props: object}`.
+Or remove the script via:
 
-```svelte
-// MyInput.svelte
-<script>
-  export let value = '';
-  export let placeholder;
-  export let label;
-  export let name;
-  export let id;
-</script>
-
-<label for={id}>{label}</label>
-<input bind:value {placeholder} {id} {name} type="text" />
-
-
-
-// another component
-<script>
-  import { dialogs } from "svelte-dialogs";
-  import MyInput from "./MyInput.svelte";
-
-  const myInputProps = {
-    placeholder: "a placeholder",
-    label: "my input",
-    name: "my-input",
-    id: "my-input-id",
-  };
-</script>
-
-
-<button
-  on:click={() =>
-    dialogs.prompt({
-      component: MyInput,
-      props: myInputProps,
-    })}
->click me</button>
-
+```bash
+rm scripts/setupTypeScript.js
 ```
 
-If no prop is required, you can just pass the component as in `prompt(MyInput)`
+If you want to use `baseUrl` or `path` aliases within your `tsconfig`, you need to set up `@rollup/plugin-alias` to tell Rollup to resolve the aliases. For more info, see [this StackOverflow question](https://stackoverflow.com/questions/63427935/setup-tsconfig-path-in-svelte).
 
-### Promise based
+## Deploying to the web
 
-All methods described return a promise that resolve on close:
+### With [Vercel](https://vercel.com)
 
-- `alert()` resolve `undefined` on dismiss
-- `confirm()` resolves `true` on confirm, `false` on decline and `undefined` on dismiss
-- `prompt()` resolves `undefined` on dismiss, while on submit resolves with an array of the inputs values
+Install `vercel` if you haven't already:
 
-so you can do something like this:
-
-```svelte
-<script>
-  import { dialogs } from "svelte-dialogs";
-
-  async function persistent() {
-    let confirm;
-    let times = "";
-    do {
-      confirm = await dialogs.confirm(
-        "are you" + times + " sure?"
-      );
-      times += " really";
-    } while (confirm);
-
-    dialogs.alert("well done......");
-  }
-</script>
-
-<button on:click={persistent}>persistent dialog</button>
-
+```bash
+npm install -g vercel
 ```
 
-### Template/Events based
+Then, from within your project folder:
 
-It's possible to define and use modals in-component using the `Dialog` component exported by _svelte-dialogs_ that accept an `options` props and emit:
-
-- `show` on in-transition start
-- `shown` on in-transition end
-- `hide` on out-transition start
-- `hidden` on out-transition end
-
-The component exports `open()` that accepts data to be passed to the modal.
-
-`close` function and `data` passed on `open()` are passed to slot as props. `close` accept a parameter that will be emitted by `on:hide`
-
-The component also exports `close()` and `data()` methods to close and retrieve modal data outside the modal
-
-```svelte
-<script>
-  import { Dialog } from "svelte-dialogs";
-
-  let dialog;
-
-  const titleId = "my-dialog-title";
-  const options = {
-    titleId,
-    closeButton: false,
-    closeOnBg: false,
-    closeOnEsc: false,
-  };
-
-  function handler({ type, detail }) {
-    // event.type 'hide' have event.detail === "my data"
-    console.log(type, detail);
-  }
-</script>
-
-<button on:click={() => dialog.open("my data")}>show</button>
-<Dialog
-  bind:this={dialog}
-  on:show={handler}
-  on:shown={handler}
-  on:hide={handler}
-  on:hidden={handler}
-  let:data
-  let:close
-  {options}
-
->
-  <h1 id={titleId}>In-component events-based dialog</h1>
-  <p>{data}</p>
-  <button on:click={() => close(data)}>close</button>
-</Dialog>
+```bash
+cd public
+vercel deploy --name my-project
 ```
 
-### CDN script tag
+### With [surge](https://surge.sh/)
 
-If you install _svelte-dialogs_ via the script tag in a non-svelte project, the script adds the `SvelteDialogs` global object which includes the same functions of the `dialogs` export of the es module. You can use it like so:
+Install `surge` if you haven't already:
 
-```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>My App Title</title>
-    <script src="https://cdn.jsdelivr.net/npm/svelte-dialogs"></script>
-  </head>
-
-  <body>
-    <button id="btn" onclick="SvelteDialogs.alert('This dialog is imported via script tag')">
-      click me
-    </button>
-  </body>
-</html>
+```bash
+npm install -g surge
 ```
 
-## Configure
+Then, from within your project folder:
 
-You can configure the defaults with _svelte-dialogs_ export `config()`, for example in the entry point of you application or in you main component, like so:
-
-```javascript
-// main.js
-import App from "./App.svelte";
-import { dialogs } from "svelte-dialogs";
-
-dialogs.config({
-  global: {
-    overlayClass: "some-other-class",
-    dialogClass: "some-other-class",
-    closeButtonClass: "some-other-class",
-    closeButtonText: "close me",
-    headerClass: "some-other-class",
-    titleClass: "some-other-class",
-    bodyClass: "some-other-class",
-    footerClass: "some-other-class",
-  },
-});
-
-const app = new App({
-  target: document.body,
-  props: {},
-});
-
-export default app;
-```
-
-config accept an object with the following properties: `global`, `alert`, `confirm`, `error`, `success`, `warning`,and `prompt` to fine-tuning the defaults at the beginning and then forget about it.
-
-Every property is a config object as the one below.
-
-It can obviously get confusing, but the order of importance for the options is:
-
-`call options -> configured per-method options -> configured global options -> defaults`
-
-.... have fun!
-
-## Options
-
-```typescript
-{
-  // sets the content of the dialog,
-  // overwriting the default component (that is DialogDontent)
-  content?: string | htmlString | SvelteComponent;
-  // props passed to the component
-  props?: object;
-  // these options always work, regardless of the component
-  closeButton?: boolean;
-  closeOnBg?: boolean;
-  closeOnEsc?: boolean;
-  transitions?: {
-    bgIn?: { transition: transition | string; props: object };
-    bgOut?: { transition: transition | string; props: object };
-    in?: { transition: transition | string; props: object };
-    out?: { transition: transition | string; props: object };
-  };
-  onHide: () => void;
-  onHidden: () => void;
-  onShow: () => void;
-  onShown: () => void;
-  overlayClass?: string;
-  dialogClass?: string;
-  closeButtonClass?: string;
-  closeButtonText?: string | htmlString;
-  // specific to DialogContent, use these if your component
-  // uses DialogContent or whith defaults
-  title?: string | htmlString;
-  text?: string | htmlString;
-  headerClass?: string;
-  titleClass?: string;
-  titleId?: string;
-  dividerClass?: string;
-  bodyClass?: string;
-  footerClass?: string;
-  // specific to alert() with default component
-  dismissButtonText?: string | htmlString;
-  dismissButtonClass?: string;
-  // specific to confirm() with default component
-  confirmButtonText?: string | htmlString;
-  declineButtonText?: string | htmlString;
-  confirmButtonClass?: string;
-  declineButtonClass?: string;
-  // specific to prompt() with default component
-  inputComponent?: SvelteComponent;
-  inputProps?: object;
-  resetButton?: boolean;
-  formClass?: string;
-  formElementClass?: string;
-  inputLabelClass?: string;
-  inputClass?: string;
-  submitButtonText?: string | htmlString;
-  cancelButtonText?: string | htmlString;
-  resetButtonText?: string | htmlString;
-  submitButtonClass?: string;
-  cancelButtonClass?: string;
-  resetButtonClass?: string;
-}
-```
-
-### `transitions` option
-
-The `transitions` object defines in/out transitions for the background overlay and the dialog with their props. You can use custom transitions functions or the ones in the [svelte/tansitions](https://svelte.dev/docs#run-time-svelte-transition) package. If you're using _svelte-dialogs_ in a non-svelte project, you can pass these transitions as string, for example:
-
-```javascript
-transitions: {
-  in: {
-    transition: 'slide',
-    props: {
-      duration: 2000,
-    },
-  },
-}
+```bash
+npm run build
+surge public my-project.surge.sh
 ```
